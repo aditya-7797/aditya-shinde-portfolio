@@ -144,35 +144,39 @@ function handleFormSubmit(e) {
     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
     submitButton.disabled = true;
     
-    // Check if it's a Netlify form
-    if (form.hasAttribute('data-netlify')) {
-        // Let Netlify handle the submission
-        fetch(form.action || window.location.pathname, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(formData).toString()
-        })
-        .then(() => {
+    // Prepare data for our API
+    const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        subject: formData.get('subject'),
+        message: formData.get('message')
+    };
+    
+    // Submit to our Vercel API
+    fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
             showFormSuccess();
             form.reset();
-        })
-        .catch(error => {
-            console.error('Error:', error);
+        } else {
             showFormError();
-        })
-        .finally(() => {
-            submitButton.innerHTML = originalText;
-            submitButton.disabled = false;
-        });
-    } else {
-        // Simulate form submission for other platforms
-        setTimeout(() => {
-            showFormSuccess();
-            submitButton.innerHTML = originalText;
-            submitButton.disabled = false;
-            form.reset();
-        }, 2000);
-    }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFormError();
+    })
+    .finally(() => {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    });
 }
 
 function showFormError() {
